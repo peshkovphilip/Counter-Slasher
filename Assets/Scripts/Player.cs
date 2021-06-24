@@ -2,32 +2,42 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
-public class Player : MonoBehaviour, IDamageble, IDestroyable
+public class Player : MonoBehaviour, IDamageble, IDestroyable, IBonusable
 {
     [SerializeField] private bool drag = false;
     [SerializeField] private int health = 100;
-    [SerializeField] public Rigidbody2D shootBody;
+    [SerializeField] private int damage = 100;
     [SerializeField] private float maxDistance = 2f;
-    private Rigidbody2D rbody;
+    [SerializeField] private Camera mainCamera;
+    private IDestroyable destroyable;
+    private IBonusable bonusable;
+    private bool activeDamage = true;
+    private bool activeDestroy = true;
+    private int activatedBonuses = 0;
+    private Rigidbody2D playerBody;
+    public event Action<GameObject, Collider2D> OnEnter;
+    public event Action<Collider2D> OnExit;
+    [SerializeField] public Rigidbody2D shootBody;
 
     void Start()
     {
-        rbody = GetComponent<Rigidbody2D>();
+        playerBody = GetComponent<Rigidbody2D>();
     }
 
     void Update()
     {
         if (drag)
         {
-            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             if (Vector2.Distance(mousePos, shootBody.position) > maxDistance)
             {
-                rbody.position = shootBody.position + (mousePos - shootBody.position).normalized * maxDistance;
+                playerBody.position = shootBody.position + (mousePos - shootBody.position).normalized * maxDistance;
             }
             else
             {
-                rbody.position = mousePos;
+                playerBody.position = mousePos;
             }
         }
     }
@@ -35,14 +45,22 @@ public class Player : MonoBehaviour, IDamageble, IDestroyable
     private void OnMouseDown()
     {
         drag = true;
-        rbody.isKinematic = true;
+        playerBody.isKinematic = true;
     }
 
     private void OnMouseUp()
     {
         drag = false;
-        rbody.isKinematic = false;
+        playerBody.isKinematic = false;
         StartCoroutine(Fly());
+    }
+    private void OnTriggerEnter2D(Collider2D currentCollider)
+    {
+        OnEnter?.Invoke(gameObject, currentCollider);
+    }
+    private void OnTriggerExit2D(Collider2D currentCollider)
+    {
+        OnExit?.Invoke(currentCollider);
     }
 
     IEnumerator Fly()
@@ -51,12 +69,18 @@ public class Player : MonoBehaviour, IDamageble, IDestroyable
         GetComponent<SpringJoint2D>().enabled = false;
         this.enabled = false;
     }
-
+    public void SetHealth(int health)
+    {
+        this.health = health;
+    }
+    public int GetHealth()
+    {
+        return health;
+    }
     public int Damage()
     {
-        return this.health;
+        return this.damage;
     }
-
     public bool SetDamage(int damage)
     {
         health -= damage;
@@ -69,6 +93,27 @@ public class Player : MonoBehaviour, IDamageble, IDestroyable
         {
             return false; // take damage
         }
+    }
+    public bool GetActiveDamage()
+    {
+        return activeDamage;
+    }
+    public void SetActiveDamage(bool active)
+    {
+        activeDamage = active;
+    }
+
+    public bool GetActiveDestroy()
+    {
+        return activeDestroy;
+    }
+    public void SetActiveDestroy(bool active)
+    {
+        activeDestroy = active;
+    }
+    public int GetActivatedBonuses()
+    {
+        return activatedBonuses;
     }
 
     private IEnumerator Retry()
