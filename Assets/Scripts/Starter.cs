@@ -1,37 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public interface IDestroyable
-{
-    public bool SetDamage(int damage);
-    public bool GetActiveDestroy();
-    public void SetActiveDestroy(bool active);
-}
-
-public interface IDamageble
-{
-    public int Damage();
-    public bool GetActiveDamage();
-    public void SetActiveDamage(bool active);
-}
-
-public interface IBonusable
-{
-    public int GetActivatedBonuses();
-    public void SetHealth(int health);
-    public int GetHealth();
-}
 
 public class Starter : MonoBehaviour
 {
     private Player player;
     private Enemy[] enemies;
+    public event Action<bool> Restart;
 
-    void Start()
-    {
-        // init other classes    
-    }
     private void OnEnable()
     {
         player = FindObjectOfType<Player>();
@@ -49,8 +26,11 @@ public class Starter : MonoBehaviour
     private void OnDisable()
     {
         player = FindObjectOfType<Player>();
-        player.OnEnter -= SetDamage;
-        player.OnEnter -= GetBonus;
+        if (player)
+        {
+            player.OnEnter -= SetDamage;
+            player.OnEnter -= GetBonus;
+        }
 
         enemies = FindObjectsOfType<Enemy>();
         foreach (Enemy enemy in enemies)
@@ -70,7 +50,11 @@ public class Starter : MonoBehaviour
             if ((damagable.GetActiveDamage()) && (destroyable.GetActiveDestroy()))
             {
                 int damage = damagable.Damage();
-                destroyable.SetDamage(damage);
+                if (destroyable.SetDamage(damage)) 
+                { 
+                    if (target.GetComponent<Player>() != null) 
+                        Restart.Invoke(true);
+                }
                 damagable.SetActiveDamage(false);
             }
         }
@@ -100,10 +84,5 @@ public class Starter : MonoBehaviour
                 Destroy(collisionObject);
             }
         }
-    }
-
-    void Update()
-    {
-        // update per frame each needed class
     }
 }

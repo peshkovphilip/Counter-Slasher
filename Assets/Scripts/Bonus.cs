@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Bonus : Starter
+public class Bonus : MonoBehaviour
 {
     [SerializeField] public float value = 2f;
     [SerializeField] public TypeOfBonus bonusType = 0;
