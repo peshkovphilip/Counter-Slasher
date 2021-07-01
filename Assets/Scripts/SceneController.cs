@@ -1,31 +1,33 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System;
 
-public class SceneController : MonoBehaviour
+public class SceneController : IStarter, IDestroyer
 {
-    private Starter starter;
+    private GameStarter starter;
+    private Damage damage;
 
-    private void OnEnable()
+    public void Starter()
     {
-        starter = FindObjectOfType<Starter>();
-        starter.Restart += RestartLevel;
+        damage = new Damage();
+        Debug.Log("start controller");
+        starter = Object.FindObjectOfType<GameStarter>();
+        damage.Restart += RestartLevel;
     }
 
-    private void OnDisable()
+    public void Destroyer()
     {
-        starter = FindObjectOfType<Starter>();
+        starter = Object.FindObjectOfType<GameStarter>();
         if (starter)
         {
-            starter.Restart -= RestartLevel;
+            damage.Restart -= RestartLevel;
         }
     }
     public void RestartLevel(bool isRestart)
     {
         if (isRestart)
-            StartCoroutine(Retry());
+            SceneManager.LoadScene("Main");
+        //UnityEngine.Object.StartCoroutine(Retry());
     }
 
     private IEnumerator Retry()
