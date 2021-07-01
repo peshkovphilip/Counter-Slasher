@@ -12,11 +12,6 @@ public class Enemy : MonoBehaviour, IDestroyable, IDamageble
     public event Action<GameObject, Collider2D> OnEnter;
     public event Action<Collider2D> OnExit;
 
-    private void Start()
-    {
-        // initialize something
-    }
-
     public bool SetDamage(int damage)
     {
         health -= damage;
